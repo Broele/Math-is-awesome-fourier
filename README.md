@@ -5,5 +5,9 @@ __Reference:__
 This work is inspired by [a great visualization of Fourier Series](https://mobile.twitter.com/jagarikin/status/962449509782495232) by [@jagarikin](https://mobile.twitter.com/jagarikin).
 
 ## Content
-Currently, there is just one notebook:
-1. [Fourier series of simple curves](Fourier-series-of-simple-curves.ipynb)
+1. [Background](Fourier-Series-of-Curves-Background.ipynb) - Explains the mathematical background of creating such animations
+and introduces Fourier series as a perfect tool for this. There are some more notebooks that
+explicitly compute the Fourier coefficients for concrete classes of curves:
+    1. [Straight Lines and Polygons](Fourier-Series-of-Curves-Example-1-Polygones.ipynb)
+    2. [Ellipse Arcs](Fourier-Series-of-Curves-Example-2-Arcs.ipynb)
+    3. [Bézier Curves](Fourier-Series-of-Curves-Example-3-Bezier.ipynb)
