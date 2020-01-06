@@ -9,6 +9,7 @@ a bigger curve.
 """
 
 import numpy as np
+from scipy.special import comb, perm
 
 
 def transform_straight_line(p1, p2, lam, a=0, b=1):
@@ -80,7 +81,7 @@ def _exp_integral(x, a, b):
     x_ = x[x != 0]
     result[x != 0] = (np.exp(x_ * b) - np.exp(x_ * a)) / x_
 
-    # Handle case x=0
+    # Handle case x = 0
     result[x == 0] = b - a
 
     # Return results
@@ -136,3 +137,61 @@ def transform_arc(p, r1, r2, phi, theta1, theta2, lam, a, b):
 
     # Return the sum of all three
     return s1 + s2 + s3
+
+
+def transform_bezier(p, lam, a=0, b=1):
+    """
+    Computes the contribution of a Bézier curve to the Fourier coefficients.
+
+    Parameters
+    ----------
+    p: array_like
+        Control points of the Bézier curve
+    lam: float or array_like
+        One or multiple lambda values
+    a: float
+        Start of the interval
+    b: float
+        End of the interval
+
+    Returns
+    -------
+
+    """
+    i = 1j  # Just for shorter notations
+
+    # Reshape lambda
+    l = np.asarray(lam)
+    s = l.shape
+    l = np.reshape(l, (-1))
+
+    # Create array for the results
+    result = np.zeros(shape=l.shape, dtype=np.complex)
+
+    # Reshape points
+    p = np.asarray(p)
+    p = np.reshape(p, (-1))
+    n = np.prod(p.shape) - 1
+
+    # Handle Case k != 0
+    l_ = np.reshape(l[l != 0], (-1))
+
+    # Iterate over r:
+    for r in range(n + 1):
+        j = np.reshape(np.arange(r + 1, dtype=int), (1, -1))
+
+        # j as row vector, lambda as a column vector --> broadcasting gives a matrix
+        u = comb(r, j) * np.power(-1, r - j) * (p[n - r + j] * np.exp(-i * (b - a) * np.reshape(l_, (-1, 1))) - p[j])
+        result[l != 0] = result[l != 0] + np.sum(u, axis=1) * perm(n, r) / np.power(i * (b - a) * l_, r + 1)
+
+    # Add factor
+    result[l != 0] = -(b - a) * np.exp(-i * l_ * a) * result[l != 0]
+
+    # Handle case lambda = 0
+    result[l == 0] = (b - a) * np.sum(p) / (n + 1)
+
+    result = np.reshape(result, s)
+
+    # Return results
+    return result
+
