@@ -35,7 +35,7 @@ def _extract_center(c,k):
     return c, k, p
 
 
-def _compute_bounding_box(c, k, p=0, factor=1):
+def _compute_bounding_box(c, k, p=0, zoom_factor=1):
     """
     Computes the bounding box of a Fourier animation.
 
@@ -48,8 +48,10 @@ def _compute_bounding_box(c, k, p=0, factor=1):
         Corresponding indices, int values
     p: complex
         Center point. 0 by default
-    factor: float
-        A shrinking / growing factor
+    zoom_factor: float
+        A factor that defines how much the bounding_box is zoomed in / out.
+        Value 1 corresponds to the normal view. Factor 2 means, bounding box has only half
+        of the originally computed size (in each direction)
 
     Returns
     -------
@@ -63,7 +65,7 @@ def _compute_bounding_box(c, k, p=0, factor=1):
         Maximal y-value
     """
     # TODO: One could look at the circles to find the effective bounding box!
-    L = np.sum(np.abs(c)) * factor
+    L = np.sum(np.abs(c)) / zoom_factor
 
     x0 = np.real(p)
     y0 = np.imag(p)
@@ -164,7 +166,7 @@ def _get_cumulative_fourier_function(c, k, p = 0):
     return cumulative_fourier_function
 
 
-def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12)):
+def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12), zoom_factor=1):
     """
     Creates an animation of a fourier series.
 
@@ -180,6 +182,8 @@ def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12)):
         Delay between frames in milliseconds. Defaults to 200.
     figsize
         Size of the figure in inches
+    zoom_factor: float
+        A factor that defines the soom into the figure
 
     Returns
     -------
@@ -206,7 +210,7 @@ def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12)):
     plt.axis('off')
 
     # Set limits
-    x_min, y_min, x_max, y_max = _compute_bounding_box(c, k , p)
+    x_min, y_min, x_max, y_max = _compute_bounding_box(c, k, p, zoom_factor=zoom_factor)
     ax.set_xlim((x_min, x_max))
     ax.set_ylim((y_min, y_max))
 
