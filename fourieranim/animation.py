@@ -35,9 +35,11 @@ def _extract_center(c,k):
     return c, k, p
 
 
-def _compute_bounding_box(c, k, p=0):
+def _compute_bounding_box(c, k, p=0, factor=1):
     """
-    Computes the bounding box of a Fourier animation. This method simply adds the radius of each circle around
+    Computes the bounding box of a Fourier animation.
+
+    This method simply adds the radius of each circle around.
     Parameters
     ----------
     c: array_like
@@ -46,6 +48,8 @@ def _compute_bounding_box(c, k, p=0):
         Corresponding indices, int values
     p: complex
         Center point. 0 by default
+    factor: float
+        A shrinking / growing factor
 
     Returns
     -------
@@ -59,7 +63,7 @@ def _compute_bounding_box(c, k, p=0):
         Maximal y-value
     """
     # TODO: One could look at the circles to find the effective bounding box!
-    L = np.sum(np.abs(c))
+    L = np.sum(np.abs(c)) * factor
 
     x0 = np.real(p)
     y0 = np.imag(p)
@@ -198,7 +202,7 @@ def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12)):
     #
 
     # Create Figure
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=figsize)
     plt.axis('off')
 
     # Set limits
