@@ -4,7 +4,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Circle
 
 
-def _extract_center(c,k):
+def _extract_center(c, k):
     """
 
     Parameters
@@ -26,7 +26,7 @@ def _extract_center(c,k):
     c = np.asarray(c)
     k = np.asarray(k)
 
-    p = np.sum(c[k == 0])    # Handle multiple coefficients for k = 0 # TODO: is this a good idea?
+    p = np.sum(c[k == 0])  # Handle multiple coefficients for k = 0 # TODO: is this a good idea?
 
     # Remove Fourier coefficient c_0, if given
     c = c[k != 0]
@@ -87,14 +87,14 @@ def _compute_bounding_box(c, k, p=0, zoom_factor=1, method='tight'):
 
         # Computes the centers of all circles over all evaluation steps
         # q.shape = (evaluation_steps, number of circles + 1)
-        fct = _get_cumulative_fourier_function(c,k,p)
-        q = np.asarray([fct(2*np.pi*t / n) for t in range(n)])
+        fct = _get_cumulative_fourier_function(c, k, p)
+        q = np.asarray([fct(2 * np.pi * t / n) for t in range(n)])
 
         # Remove the point on the last circle - we are only interested in the circles centers
-        q = q[:,:-1]
+        q = q[:, :-1]
 
         # Radius of the circles
-        r = np.reshape(np.abs(c), (1,-1))
+        r = np.reshape(np.abs(c), (1, -1))
 
         # Compute the bounding box by adding / substracting r to the circle centers
         # and finding maximal / minimal values
@@ -108,7 +108,7 @@ def _compute_bounding_box(c, k, p=0, zoom_factor=1, method='tight'):
     return x_min, y_min, x_max, y_max
 
 
-def _get_fourier_function(c, k, p = 0):
+def _get_fourier_function(c, k, p=0):
     """
     Return a function, that computes for a a number of `t` inbetween `0` and `2*pi` the fourier function.
 
@@ -127,6 +127,7 @@ def _get_fourier_function(c, k, p = 0):
         A function, that takes an array `t`and return a corresponding array `a` for which the Fourier function was computed
         for each value of `t`
     """
+
     def fourier_function(t):
         """
         A function, that takes a parameter `t`and return an array `a`, where `a[i]` contains the fourier approximation,
@@ -142,8 +143,8 @@ def _get_fourier_function(c, k, p = 0):
         a: array_like
             The Fourier function evaluated at `t`
         """
-        a = c * np.exp(1j * np.reshape(k, (1,-1)) * np.reshape(t, (-1,1)))
-        a = np.sum(a, axis = 1) + p
+        a = c * np.exp(1j * np.reshape(k, (1, -1)) * np.reshape(t, (-1, 1)))
+        a = np.sum(a, axis=1) + p
         a = np.reshape(a, np.shape(t))
 
         return a
@@ -151,7 +152,7 @@ def _get_fourier_function(c, k, p = 0):
     return fourier_function
 
 
-def _get_cumulative_fourier_function(c, k, p = 0):
+def _get_cumulative_fourier_function(c, k, p=0):
     """
     Return a function, that computes for a given `t` inbetween `0` and `2*pi` the fourier approximations
     if only a part of the fourier coefficients is used.
@@ -171,6 +172,7 @@ def _get_cumulative_fourier_function(c, k, p = 0):
         A function, that takes a parameter `t`and return an array `a`, where `a[i]` contains the fourier approximation,
         if only the first `i` coefficients of `c` are used
     """
+
     def cumulative_fourier_function(t):
         """
         A function, that takes a parameter `t`and return an array `a`, where `a[i]` contains the fourier approximation,
@@ -309,7 +311,7 @@ def animate_fourier(c, k,
         for j in range(len(pos)):
             circles[j].set_center((np.real(pos[j]), np.imag(pos[j])))
 
-        t = np.arange(i+1) * 2 * np.pi / frames
+        t = np.arange(i + 1) * 2 * np.pi / frames
         points = fourier_fct(t)
 
         x, y = np.real(points), np.imag(points)
