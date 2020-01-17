@@ -196,7 +196,11 @@ def _get_cumulative_fourier_function(c, k, p = 0):
     return cumulative_fourier_function
 
 
-def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12), bounding_box='tight', zoom_factor=1):
+def animate_fourier(c, k,
+                    frames=100, interval=200,
+                    figsize=(12, 12),
+                    bounding_box='tight', zoom_factor=1,
+                    circle_style={}, curve_style={}):
     """
     Creates an animation of a fourier series.
 
@@ -219,6 +223,10 @@ def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12), boundin
     zoom_factor: float
         A factor that defines the zoom into the figure. Ignored, if `bounding_box`
         specifies an explicit bounding box.
+    curve_style: dict
+        A list of styling parameters for the curve. See also `matplotlib.pyplot.plot`.
+    circle_style: dict
+        A list of styling parameters for the circles. See also `matplotlib.patches.Circle`.
 
     Returns
     -------
@@ -251,21 +259,34 @@ def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12), boundin
         x_min, y_min, x_max, y_max = bounding_box
     ax.set_xlim((x_min, x_max))
     ax.set_ylim((y_min, y_max))
+    ax.set_aspect('equal')
 
     #
     # 3. Create Elements
     #
 
+    # Styles
+    ci_s = {
+        'fill': False,
+        'color': [0.5, 0.5, 0.5],
+        'lw': 1.5
+    }
+    ci_s.update(circle_style)
+
+    cu_s = {
+        'lw': 3
+    }
+    cu_s.update(curve_style)
+
     # Circles
-    circles = [Circle((0, 0), radius=r[i], fill=False) for i in range(len(c))]
+    circles = [Circle((0, 0), radius=r[i], **ci_s) for i in range(len(c))]
     for circle in circles:
         ax.add_artist(circle)
 
     # dot = Circle((np.real(pos_dot), np.imag(pos_dot)), radius=L / 100)
     # ax.add_artist(dot)
 
-    line, = ax.plot([], [], lw=3)
-
+    line, = ax.plot([], [], **cu_s)
 
     #
     # 4. Fourier Computation
