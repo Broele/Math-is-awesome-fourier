@@ -93,3 +93,47 @@ def transform_path_segment(segment, k, a=0, b=2 * np.pi):
         raise TypeError(f"Unsupported svg path segment class '{type(segment)}'")
 
     return c
+
+
+def transform_svg_file(filename, N=50, path_sequence=None):
+    """
+    Loads an svg file and transforms the paths into fourier coefficients
+
+    Parameters
+    ----------
+    filename: Path or str
+        Path of the svg file
+    N: int
+        Maximal Fourier coefficient. The transformation returns the coefficients -N to N
+        (both included)
+    path_sequence: int or list or tuple
+        If the file contains multiple paths, this parameter allows to:
+        - select one
+        - define a sequence of paths
+        - exclude paths (by not including their id in the list)
+
+    Returns
+    -------
+    c: array_like
+        An array of 2*N + 1 Fourier coefficients
+    k: array_like
+        The corresponding indices
+    """
+    # Load svg
+    paths, _ = svg2paths(filename)
+
+    # Select paths
+    if path_sequence is not None:
+        try:
+            paths = [paths[i] for i in path_sequence]
+        except:
+            paths = paths[path_sequence]
+
+    # Compute Fourier coefficients
+    k = np.arange(-N, N + 1)
+    c = transform_path_segment(paths, k)
+
+    # In svg, the y-axis points downwards, but we want to have the correct orientation:
+    c = np.conjugate(c)
+
+    return c, k
