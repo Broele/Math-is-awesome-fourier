@@ -35,7 +35,7 @@ def _extract_center(c,k):
     return c, k, p
 
 
-def _compute_bounding_box(c, k, p=0, zoom_factor=1):
+def _compute_bounding_box(c, k, p=0, zoom_factor=1, method='tight'):
     """
     Computes the bounding box of a Fourier animation.
 
@@ -52,6 +52,10 @@ def _compute_bounding_box(c, k, p=0, zoom_factor=1):
         A factor that defines how much the bounding_box is zoomed in / out.
         Value 1 corresponds to the normal view. Factor 2 means, bounding box has only half
         of the originally computed size (in each direction)
+    method: str
+        Defines the method how to compute the bounding box. Options are:
+        "radius" - sums up the circles radii to determine the maximal length of the bounding box
+        "tight" - simulates the circles movement to compute the exact bounding box to always show all circles completely
 
     Returns
     -------
@@ -64,16 +68,42 @@ def _compute_bounding_box(c, k, p=0, zoom_factor=1):
     y_max: float
         Maximal y-value
     """
-    # TODO: One could look at the circles to find the effective bounding box!
-    L = np.sum(np.abs(c)) / zoom_factor
+    if method is "radius":
+        # The sum of all radii is half of the bounding box length / height
+        L = np.sum(np.abs(c)) / zoom_factor
 
-    x0 = np.real(p)
-    y0 = np.imag(p)
+        x0 = np.real(p)
+        y0 = np.imag(p)
 
-    x_min = x0 - L
-    y_min = y0 - L
-    x_max = x0 + L
-    y_max = y0 + L
+        x_min = x0 - L
+        y_min = y0 - L
+        x_max = x0 + L
+        y_max = y0 + L
+
+    elif method is "tight":
+        # Number of evaluation steps
+        n = 1000
+        t = np.arange(0, 2 * np.pi, 2 * np.pi / 1000)
+
+        # Computes the centers of all circles over all evaluation steps
+        # q.shape = (evaluation_steps, number of circles + 1)
+        fct = _get_cumulative_fourier_function(c,k,p)
+        q = np.asarray([fct(2*np.pi*t / n) for t in range(n)])
+
+        # Remove the point on the last circle - we are only interested in the circles centers
+        q = q[:,:-1]
+
+        # Radius of the circles
+        r = np.reshape(np.abs(c), (1,-1))
+
+        # Compute the bounding box by adding / substracting r to the circle centers
+        # and finding maximal / minimal values
+        x_min = np.min(np.real(q) - r)
+        x_max = np.max(np.real(q) + r)
+        y_min = np.min(np.imag(q) - r)
+        y_max = np.max(np.imag(q) + r)
+    else:
+        raise ValueError(f"'{method}' is not a valid method. Currently only 'radius' and 'tight' are supported. ")
 
     return x_min, y_min, x_max, y_max
 
@@ -166,7 +196,7 @@ def _get_cumulative_fourier_function(c, k, p = 0):
     return cumulative_fourier_function
 
 
-def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12), zoom_factor=1):
+def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12), bounding_box='tight', zoom_factor=1):
     """
     Creates an animation of a fourier series.
 
@@ -180,10 +210,15 @@ def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12), zoom_fa
         Number of frames
     interval : number, optional
         Delay between frames in milliseconds. Defaults to 200.
-    figsize
+    figsize: tuple
         Size of the figure in inches
+    bounding_box: str or array_like
+        Either a concrete bounding box as (x_min, y_min, x_max, y_max) tuple or a
+        string that specifies the bounding_box algorithm. Possible values are
+        `radius` and `tight`.
     zoom_factor: float
-        A factor that defines the soom into the figure
+        A factor that defines the zoom into the figure. Ignored, if `bounding_box`
+        specifies an explicit bounding box.
 
     Returns
     -------
@@ -210,7 +245,10 @@ def animate_fourier(c, k, frames = 100, interval = 200, figsize=(12,12), zoom_fa
     plt.axis('off')
 
     # Set limits
-    x_min, y_min, x_max, y_max = _compute_bounding_box(c, k, p, zoom_factor=zoom_factor)
+    if isinstance(bounding_box, str):
+        x_min, y_min, x_max, y_max = _compute_bounding_box(c, k, p, zoom_factor=zoom_factor, method=bounding_box)
+    else:
+        x_min, y_min, x_max, y_max = bounding_box
     ax.set_xlim((x_min, x_max))
     ax.set_ylim((y_min, y_max))
 
