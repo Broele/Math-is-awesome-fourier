@@ -8,7 +8,7 @@ from svgpathtools import svg2paths, Path, Line, Arc, QuadraticBezier, CubicBezie
 from .transform import transform_straight_line, transform_arc, transform_bezier
 
 
-def transform_path_segment(segment, k, a=0, b=2 * np.pi):
+def transform_path_segment(segment, k, a=0, b=2 * np.pi, eps=0.0000001):
     """
     Computes the contribution of the segment to the Fourier coefficients.
 
@@ -38,8 +38,15 @@ def transform_path_segment(segment, k, a=0, b=2 * np.pi):
     if isinstance(segment, (Path, list)):
         # Path: Iterate of path segments
 
+        # Compute Segment length
+        L = [s.length() for s in segment]
+
+        # Remove Micro-Segments
+        thresh = sum(L) * eps
+        segment = [s for s, l in zip(segment, L) if l > thresh]
+        L = [0] + [l for l in L if l > thresh]
+
         # Use length of path to compute borders
-        L = [0] + [s.length() for s in segment]
         L = np.cumsum(L) / np.sum(L)
         L = a + (b - a) * L
 
